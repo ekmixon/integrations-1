@@ -29,10 +29,7 @@ with path.open(mode='w') as csvfile:
                     desc = str(metrics[mm]['description']).replace("\n", " ")
                 if desc is None:
                     desc = "THE METRIC DESCRIPTION IS BLANK"
-                if 'custom' not in metrics[mm].keys():
-                    custom = False
-                else:
-                    custom = metrics[mm]['custom']
+                custom = False if 'custom' not in metrics[mm].keys() else metrics[mm]['custom']
                 if custom is None:
                     custom = "THE CUSTOM SETTING IS NOT SPECIFIED."
                 if 'metric_type' not in metrics[mm].keys():

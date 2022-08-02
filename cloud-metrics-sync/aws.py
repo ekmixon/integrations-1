@@ -31,10 +31,7 @@ def _replace_brackets(s):
 def get_description(desc):
     clean, *rest = _replace_brackets(_remove_parens(_clean_whitespace(desc.text))).split(".")
 
-    if clean.endswith("."):
-        return clean
-    else:
-        return clean + "."
+    return clean if clean.endswith(".") else f"{clean}."
 
 
 class Extractor:

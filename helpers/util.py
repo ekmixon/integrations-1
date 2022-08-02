@@ -12,12 +12,10 @@ def all_integrations() -> List[Tuple[pathlib.Path, Dict[str, Any]]]:
     Returns a list of tuples of the directory path for each integration along
     with its meta deserialized as a dict.
     """
-    out = []
-
-    for meta_path in sorted(INTEGRATIONS_PATH.glob("**/meta.yaml")):
-        out.append((meta_path.parent, parse_meta(meta_path)))
-
-    return out
+    return [
+        (meta_path.parent, parse_meta(meta_path))
+        for meta_path in sorted(INTEGRATIONS_PATH.glob("**/meta.yaml"))
+    ]
 
 
 def parse_meta(meta_path) -> Dict[str, Any]:
@@ -36,10 +34,7 @@ def uses_legacy_build(meta):
 
 def extract(content, starter, stopper):
     lines = content.splitlines(True)
-    started = False
-    if starter == None:
-        started = True
-
+    started = starter is None
     extracted = ""
     for line in lines:
         if started == False and line.strip().startswith(starter):
@@ -63,7 +58,7 @@ def get_output_filename(monitor, header):
     output_filename = output_filename.replace(" ", ".").replace("/", ".")
     if output_filename == "":
         output_filename = monitor
-    output_filename = "integrations." + output_filename + ".md"
+    output_filename = f"integrations.{output_filename}.md"
     return output_filename
 
 

@@ -20,17 +20,21 @@ def generate(input_file, output_file_dir):
 
 
 def write_md_file(metric, output_file_dir):
-    file_path = output_file_dir + '/' + metric['type'] + '.' + \
-        metric['title'].replace(' ', '_').lower() + '.md'
-    f = open(file_path, 'w')
-    f.write('---\n')
-    f.write('title: ' + metric['title'] + '\n')
-    f.write('brief: ' + (metric.get('brief', '').strip() or metric['description']) + '\n')
-    f.write('metric_type: ' + metric['type'] + '\n')
-    f.write('---\n')
-    f.write('### ' + metric['title'] + '\n\n')
-    f.write(metric['description'])
-    f.close()
+    file_path = (
+        f'{output_file_dir}/'
+        + metric['type']
+        + '.'
+        + metric['title'].replace(' ', '_').lower()
+    ) + '.md'
+
+    with open(file_path, 'w') as f:
+        f.write('---\n')
+        f.write('title: ' + metric['title'] + '\n')
+        f.write('brief: ' + (metric.get('brief', '').strip() or metric['description']) + '\n')
+        f.write('metric_type: ' + metric['type'] + '\n')
+        f.write('---\n')
+        f.write('### ' + metric['title'] + '\n\n')
+        f.write(metric['description'])
 
 
 generate(sys.argv[1], sys.argv[2])

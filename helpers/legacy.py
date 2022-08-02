@@ -41,18 +41,14 @@ def extract_section(src_path, toc_item):
 
 
 def collect_metrics(monitor):
-    metrics_yaml = os.path.join(INTEGRATIONS_PATH, monitor + "/metrics.yaml")
+    metrics_yaml = os.path.join(INTEGRATIONS_PATH, f"{monitor}/metrics.yaml")
     return collect_metrics_yaml(metrics_yaml)
 
 
 def tabulate_metrics(metrics):
     metric_table = ""
     metric_list = ""
-    show_type_column = False
-    for metric in metrics:
-        if metric.get("metric_type"):
-            show_type_column = True
-            break
+    show_type_column = any(metric.get("metric_type") for metric in metrics)
     for metric in metrics:
         metric_table += (
             "| ["
@@ -70,9 +66,12 @@ def tabulate_metrics(metrics):
             metric_list += "`" + metric.get("metric_type") + "`\n\n"
         metric_list += metric.get("description") + "\n\n"
 
-    tabulated = "\n| Metric Name | Description | Type |\n| --- | --- | --- |\n"
-    if not show_type_column:
-        tabulated = "\n| Metric Name | Description |\n| --- | --- |\n"
+    tabulated = (
+        "\n| Metric Name | Description | Type |\n| --- | --- | --- |\n"
+        if show_type_column
+        else "\n| Metric Name | Description |\n| --- | --- |\n"
+    )
+
     tabulated += metric_table
     tabulated += "\n"
     tabulated += metric_list
@@ -94,50 +93,56 @@ def process_images(src_path, monitor, contents):
 
     for p in re.finditer(image_pattern, contents):
         image_filename = p.group(1)
-        is_integrations_github = re.match(
-            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$", image_filename
-        )
-        if is_integrations_github:
-            src_image_path = os.path.join(INTEGRATIONS_PATH, is_integrations_github.group(1))
+        if is_integrations_github := re.match(
+            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$",
+            image_filename,
+        ):
+            src_image_path = os.path.join(INTEGRATIONS_PATH, is_integrations_github[1])
             if not os.path.exists(src_image_path):
                 continue
-            image_filename = is_integrations_github.group(2)
-            dest_image_path = os.path.join(OUTPUT_IMAGE_PATH, monitor + "/" + image_filename)
+            image_filename = is_integrations_github[2]
         else:
             src_image_path = os.path.join(src_path, image_filename)
             image_filename = image_filename.replace("./img/", "")
-            dest_image_path = os.path.join(OUTPUT_IMAGE_PATH, monitor + "/" + image_filename)
+        dest_image_path = os.path.join(
+            OUTPUT_IMAGE_PATH, f"{monitor}/{image_filename}"
+        )
+
         copy_image(src_image_path, dest_image_path)
 
     for p in re.finditer(image_pattern, contents):
         image_filename = p.group(1)
-        is_integrations_github = re.match(
-            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$", image_filename
-        )
-        if is_integrations_github:
-            src_image_path = os.path.join(INTEGRATIONS_PATH, is_integrations_github.group(1))
+        if is_integrations_github := re.match(
+            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$",
+            image_filename,
+        ):
+            src_image_path = os.path.join(INTEGRATIONS_PATH, is_integrations_github[1])
             if not os.path.exists(src_image_path):
                 continue
-            image_filename = is_integrations_github.group(2)
-            dest_image_path = os.path.join(OUTPUT_IMAGE_PATH, monitor + "/" + image_filename)
+            image_filename = is_integrations_github[2]
         else:
             src_image_path = os.path.join(src_path, image_filename)
             image_filename = image_filename.replace("./img/", "")
-            dest_image_path = os.path.join(OUTPUT_IMAGE_PATH, monitor + "/" + image_filename)
+        dest_image_path = os.path.join(
+            OUTPUT_IMAGE_PATH, f"{monitor}/{image_filename}"
+        )
+
         image_filename = image_filename.replace("./", "")
         contents = contents.replace(
-            p.group(1), "../../_images/images-integrations/integrations-reference/" + monitor + "/" + image_filename
+            p.group(1),
+            f"../../_images/images-integrations/integrations-reference/{monitor}/{image_filename}",
         )
+
 
     header = contents.split("\n")[0]
     contents_no_header = contents.replace(header + "\n", "")
     for p in re.finditer(image_pattern, contents_no_header):
         image_link = p.group(1)
-        is_integrations_github = re.match(
-            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$", image_link
-        )
-        if is_integrations_github:
-            image_link = is_integrations_github.group(2)
+        if is_integrations_github := re.match(
+            r"https:\/\/github\.com\/signalfx\/integrations\/blob\/master\/(.*\/img\/([^\/]*))$",
+            image_link,
+        ):
+            image_link = is_integrations_github[2]
         else:
             image_link = re.sub(pattern=r"_images\/(.*\/)", repl="_images/", string=image_link)
 
@@ -157,31 +162,24 @@ def remove_links(contents):
 
 def link_sub(m):
     link = sanitize_link(m.group("link"))
-    is_monitor_github_link = re.search(sfx_monitor_github_link_pattern, link)
-    if is_monitor_github_link:
-        new_link = MONITOR_DOC_BASE_URL + is_monitor_github_link.group(1) + ".html"
+    if is_monitor_github_link := re.search(
+        sfx_monitor_github_link_pattern, link
+    ):
+        new_link = MONITOR_DOC_BASE_URL + is_monitor_github_link[1] + ".html"
     else:
-        docUrl = find_doc_url(link)
-        if docUrl:
-            new_link = docUrl
-        else:
-            new_link = link
-
-    prefix = ""
-    if "check_is_image" in m.groupdict():
-        prefix = m.group("check_is_image")
-
+        new_link = docUrl if (docUrl := find_doc_url(link)) else link
+    prefix = m.group("check_is_image") if "check_is_image" in m.groupdict() else ""
     if new_link.startswith("http") == True and new_link.startswith("https://docs.signalfx.com/en") != True:
         # should open in new tab
         return prefix + '<a target="_blank" href="' + new_link + '">' + m.group("text") + "</a>"
     else:
-        return prefix + "[" + m.group("text") + "](" + new_link + ")"
+        return f"{prefix}[" + m.group("text") + "](" + new_link + ")"
 
 
 def find_doc_url(link):
     match = re.match(integration_github_link_pattern, link)
-    if match and match.group("monitor") in RTD_URLS.keys():
-        return RTD_URLS[match.group("monitor")]
+    if match and match["monitor"] in RTD_URLS.keys():
+        return RTD_URLS[match["monitor"]]
     return None
 
 
@@ -200,7 +198,7 @@ def process_links(contents):
             pass
 
     for p in re.finditer(doc_link_pattern, contents):
-        contents = contents.replace(p.group(1), "#" + p.group(2))
+        contents = contents.replace(p.group(1), f"#{p.group(2)}")
 
     return contents
 
@@ -213,8 +211,7 @@ def prepare_rtd_url(folder, contents):
     output_filename = output_filename.replace(" ", ".").replace("/", ".")
     if output_filename == "":
         output_filename = folder
-    url = "%s%s.html" % (RTD_BASE_URL, output_filename)
-    return url
+    return f"{RTD_BASE_URL}{output_filename}.html"
 
 
 def prepare():
@@ -240,11 +237,11 @@ def render_header(monitor, sections):
     output_filename = output_filename.replace(" ", ".").replace("/", ".")
 
     if not output_filename.strip():
-        first_line = first_line + " " + monitor.capitalize()
+        first_line = f"{first_line} {monitor.capitalize()}"
 
     header = first_line + "\n\n"
     for section in sections:
-        header += "- [" + section.capitalize() + "](#" + section.replace(" ", "-") + ")\n"
+        header += f"- [{section.capitalize()}](#" + section.replace(" ", "-") + ")\n"
     header += "\n"
 
     return header
@@ -277,9 +274,8 @@ def do_smart_agent_monitor(src_path: Path):
     except:
         pass
 
-    fout = open(output_path, "ab")
-    fout.write(contents.encode("utf-8"))
-    fout.close()
+    with open(output_path, "ab") as fout:
+        fout.write(contents.encode("utf-8"))
 
 
 def do_non_smart_agent_monitor_with_readme(src_path: Path):
@@ -309,9 +305,8 @@ def do_non_smart_agent_monitor_with_readme(src_path: Path):
     except OSError:
         pass
 
-    fout = open(output_path, "ab")
-    fout.write(contents.encode("utf-8"))
-    fout.close()
+    with open(output_path, "ab") as fout:
+        fout.write(contents.encode("utf-8"))
 
 
 def do_non_smart_agent_monitor_without_readme(src_path: Path):
@@ -330,9 +325,8 @@ def do_non_smart_agent_monitor_without_readme(src_path: Path):
     except OSError:
         pass
 
-    fout = open(output_path, "ab")
-    fout.write(contents.encode("utf-8"))
-    fout.close()
+    with open(output_path, "ab") as fout:
+        fout.write(contents.encode("utf-8"))
 
 
 def process_integration(integration_dir: Path):

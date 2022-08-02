@@ -55,9 +55,9 @@ def make_metrics_yaml(integration_dir):
     if not metrics:
         return
 
-    text = ""
-    for name in metrics:
-        text += yaml.dump({name: metrics[name]}) + "\n"
+    text = "".join(
+        yaml.dump({name: value}) + "\n" for name, value in metrics.items()
+    )
 
     (integration_dir / "metrics.yaml").write_text(text)
 

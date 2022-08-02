@@ -35,7 +35,7 @@ def move_smart_agent_docs():
 
     for doc in all_files:
         doc_filename = str(doc)
-        print("Fixing relative path in %s" % doc_filename)
+        print(f"Fixing relative path in {doc_filename}")
 
         content = doc.read_text(encoding="utf-8")
 
@@ -56,7 +56,7 @@ def move_smart_agent_docs():
 
 
 def move_agent_docs():
-    print("Copying %s to %s" % (INTEGRATIONS_AGENT_DOC_PATH, OUTPUT_AGENT_DOC_PATH))
+    print(f"Copying {INTEGRATIONS_AGENT_DOC_PATH} to {OUTPUT_AGENT_DOC_PATH}")
     assert INTEGRATIONS_AGENT_DOC_PATH.exists()
     assert OUTPUT_AGENT_DOC_PATH.exists()
 
@@ -74,7 +74,7 @@ def fix_relative_links_in_monitor(content, filename, agent_docs):
     if "monitors/_monitor-config.md" in filename:
         # Handle relative links to root level docs
         for agent_doc in agent_docs:
-            content = content.replace("](./%s" % agent_doc, "](../%s" % agent_doc)
+            content = content.replace(f"](./{agent_doc}", f"](../{agent_doc}")
 
         content = re.sub(monitor_docs_link_pattern, r"\1\2", content)
         content = content.replace("](./observer-config.md", "](../observers/_observer-config.md")
@@ -92,7 +92,7 @@ def fix_relative_links_in_observer(content, filename, agent_docs):
     if "observers/_observer-config.md" in filename:
         # Handle relative links to root level docs
         for agent_doc in agent_docs:
-            content = content.replace("](./%s" % agent_doc, "](../%s" % agent_doc)
+            content = content.replace(f"](./{agent_doc}", f"](../{agent_doc}")
 
         content = re.sub(obsesrver_docs_link_pattern, r"\1\2", content)
         content = content.replace("../observer-config.md", "./_observer-config.md")
@@ -111,14 +111,7 @@ def fix_relative_links_in_root(content):
 
 
 def get_simple_file_names(full_path):
-    if not full_path:
-        return []
-
-    res = []
-    for p in full_path:
-        res.append(os.path.basename(p)[:-3])
-
-    return res
+    return [os.path.basename(p)[:-3] for p in full_path] if full_path else []
 
 
 def group_files():
@@ -149,4 +142,4 @@ def collect_files_in_groups(path, all_files):
         elif os.path.relpath(path_parent, os.path.join(OUTPUT_AGENT_DOC_PATH, "observers")) == os.path.curdir:
             all_files["observers"].append(path)
         else:
-            print("Unknown relative link: %s" % path)
+            print(f"Unknown relative link: {path}")

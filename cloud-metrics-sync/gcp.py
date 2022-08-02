@@ -39,8 +39,8 @@ class GCPFetcher(Fetcher):
         self._docs = docs
         if not project_id:
             project_id = os.environ.get("GCP_PROJECT_ID")
-            if not project_id:
-                raise ValueError("GCP_PROJECT_ID must be set to a valid GCP project ID")
+        if not project_id:
+            raise ValueError("GCP_PROJECT_ID must be set to a valid GCP project ID")
         self._project = self._client.project_path(project_id)
 
     def list(self) -> List[str]:

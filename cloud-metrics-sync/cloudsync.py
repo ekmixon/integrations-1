@@ -68,7 +68,7 @@ def main(platform, only, cmd_show, cmd_sync, cmd_list):
 
             metrics = list(f.get(integration))
 
-            if len(metrics) == 0:
+            if not metrics:
                 raise RuntimeError(f"Zero metrics were returned for {integration}")
 
             if cmd_show:

@@ -60,16 +60,14 @@ def collect_docs() -> Dict[str, Any]:
 
     for integration_dir, meta in all_integrations():
         integration_name = integration_dir.name
-        markdown = ""
-        for readme in sorted(integration_dir.glob("*.md")) + sorted(integration_dir.glob("README.md.jinja")):
-            markdown += readme.read_text(encoding="utf-8")
-
-        if not markdown:
-            continue
-
-        docs[integration_name] = {
-            "markdown": process_markdown_for_app(markdown, integration_dir, uses_legacy_build(meta))
-        }
+        if markdown := "".join(
+            readme.read_text(encoding="utf-8")
+            for readme in sorted(integration_dir.glob("*.md"))
+            + sorted(integration_dir.glob("README.md.jinja"))
+        ):
+            docs[integration_name] = {
+                "markdown": process_markdown_for_app(markdown, integration_dir, uses_legacy_build(meta))
+            }
 
     return docs
 
@@ -127,12 +125,10 @@ def collect_meta() -> Dict[str, Any]:
     """
     Returns a dict that contains metadata for each integration.
     """
-    out = {}
-    for integrations_dir, meta in all_integrations():
-        integration_name = integrations_dir.name
-        out[integration_name] = meta
-        # print(f"Processed meta for integration {integration_name}")
-    return out
+    return {
+        integrations_dir.name: meta
+        for integrations_dir, meta in all_integrations()
+    }
 
 
 def render_js_module(

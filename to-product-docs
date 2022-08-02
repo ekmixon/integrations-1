@@ -49,10 +49,7 @@ def process_integration(integration_dir, meta):
 
 
 if __name__ == "__main__":
-    integration = None
-    if len(sys.argv) > 1:
-        integration = sys.argv[1].strip()
-
+    integration = sys.argv[1].strip() if len(sys.argv) > 1 else None
     if integration:
         print(f"Processing integration {integration}")
         process_integration(*get_integration(integration))
